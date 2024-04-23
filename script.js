@@ -61,6 +61,82 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
+const displayMovements = function (movements) {
+  containerMovements.innerHTML = '';
+  movements.forEach(function (mov, i){
+    
+    const type = mov > 0 ? 'deposit' : 'withdrawal';
+
+    const html = 
+    `
+      <div class="movements__row">
+        <div class="movements__type movements__type--${type}">${i+1} ${type}</div>
+        <div class="movements__value">${mov}€</div>
+      </div>
+    `
+    containerMovements.insertAdjacentHTML('afterbegin', html);
+
+  })
+}
+
+const displayBalance = function(movements){
+  const balance = movements.reduce((accumulator, mov) => accumulator + mov, 0);
+  labelBalance.textContent = `${balance}€`;
+ 
+}
+
+const displaySum = function(acc){
+  const sumIn = acc.movements.filter(mov => mov > 0).reduce((accumulator, mov) => accumulator + mov, 0);
+  labelSumIn.textContent = `${sumIn}€`;
+
+  const sumOut = acc.movements.filter(mov => mov < 0).reduce((accumulator, mov) => accumulator + mov, 0);
+  labelSumOut.textContent = `${Math.abs(sumOut)}€`;
+
+  const sumInterest = acc.movements.filter(mov => mov > 0).map(deposit => deposit * acc.interestRate / 100).filter(interest => interest >= 1).reduce((accumulator, interest) => accumulator + interest, 0);
+  labelSumInterest.textContent = `${sumInterest}€`;
+}
+
+const createUserNames = function(accs){
+  accs.forEach(acc =>
+    acc.username = acc.owner.toLowerCase().split(" ").map(word => word.at(0)).join(''))
+  }
+
+createUserNames(accounts)
+console.log(accounts);
+
+// Event handlers
+let currentAccount;
+btnLogin.addEventListener("click",function(e) {
+  // Prevent form from submitting
+  e.preventDefault()
+
+  currentAccount = accounts.find(acc => acc.username === inputLoginUsername.value)
+  console.log(currentAccount);
+
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    // Clear input fields
+    inputLoginUsername.value = inputLoginPin.value = '';
+    inputLoginPin.blur();
+    // Display UI and welcome message
+    console.log(`Welcome back, ${currentAccount.owner.split(" ")[0]}`);
+    labelWelcome.textContent = `Welcome back, ${currentAccount.owner.split(" ")[0]} ☺️`
+    containerApp.style.opacity = 100;
+
+    // Display movements
+    displayMovements(currentAccount.movements);
+
+    // Display balance
+    displayBalance(currentAccount.movements);
+
+    // Display summary
+    displaySum(currentAccount.summary);
+
+    
+
+}})
+
+
+
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 // LECTURES
@@ -72,5 +148,11 @@ const currencies = new Map([
 ]);
 
 const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
+
+
+const euroToUSD = 1.1;
+const movementsUSD = movements.map(mov =>  mov * euroToUSD);
+
+
 
 /////////////////////////////////////////////////
